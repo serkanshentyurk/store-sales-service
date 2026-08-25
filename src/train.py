@@ -34,7 +34,7 @@ def rmspe(y_true, y_pred) -> float:
 
 def temporal_split(df: pd.DataFrame, holdout_weeks: int) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Split at the last `holdout_weeks` of data; assert no temporal overlap."""
-    cutoff = df["Date"].max() - pd.Timedelta(weeks=holdout_weeks)
+    cutoff = df["Date"].max() - pd.to_timedelta(holdout_weeks, unit="W")
     train_df = df[df["Date"] < cutoff]
     test_df = df[df["Date"] >= cutoff]
     assert train_df["Date"].max() < test_df["Date"].min()

@@ -2,6 +2,7 @@ import pandas as pd
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import OneHotEncoder, TargetEncoder
+from sklearn.model_selection import KFold
 
 def add_features(df: pd.DataFrame) -> pd.DataFrame:
 	df = df.copy()
@@ -46,7 +47,7 @@ def build_preprocessor() -> ColumnTransformer:
 		transformers=[
 			("impute", SimpleImputer(strategy="median", add_indicator=True), numeric_impute), # median imputation with indicator for missing values
 			("ohe",    OneHotEncoder(handle_unknown="ignore", sparse_output=False), low_card_cat), # one-hot encoding for low-cardinality categorical features
-			("store", TargetEncoder(target_type="continuous", random_state=42), high_card_cat), # target encoding for high-cardinality categorical features
+			("store", TargetEncoder(target_type="continuous", cv=KFold(n_splits=5, shuffle=True, random_state=42)), high_card_cat), # target encoding for high-cardinality categorical features
 			("pass",   "passthrough", passthrough), # pass through other specified features without transformation
 		],
 		remainder="drop", # drop any remaining features not specified in the transformers
