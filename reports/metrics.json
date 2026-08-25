@@ -1,0 +1,8 @@
+{
+  "model_rmspe": 0.176,
+  "model_mae": 806.3,
+  "baseline_rmspe": 0.2332,
+  "baseline_mae": 1240.3,
+  "n_train": 802942,
+  "n_test": 41396
+}

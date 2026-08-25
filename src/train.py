@@ -17,8 +17,9 @@ from src.features import add_features, build_preprocessor
 
 DATA_PATH = "data"
 MODEL_DIR = Path("models")
+REPORT_DIR = Path("reports")
 MODEL_PATH = MODEL_DIR / "pipeline.joblib"
-METRICS_PATH = MODEL_DIR / "metrics.json"
+METRICS_PATH = REPORT_DIR / "metrics.json"
 HOLDOUT_WEEKS = 6
 RANDOM_STATE = 42
 TARGET = "Sales"
@@ -78,12 +79,14 @@ def main() -> None:
     }
 
     MODEL_DIR.mkdir(parents=True, exist_ok=True)
+    REPORT_DIR.mkdir(parents=True, exist_ok=True)
     joblib.dump(pipe, MODEL_PATH)
     METRICS_PATH.write_text(json.dumps(metrics, indent=2))
 
     print(f"model    RMSPE {metrics['model_rmspe']}  MAE {metrics['model_mae']}")
     print(f"baseline RMSPE {metrics['baseline_rmspe']}  MAE {metrics['baseline_mae']}")
-    print(f"saved -> {MODEL_PATH}")
+    print(f"model -> {MODEL_PATH}")
+    print(f"metrics -> {METRICS_PATH}")
 
 
 if __name__ == "__main__":
