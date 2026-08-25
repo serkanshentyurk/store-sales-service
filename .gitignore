@@ -45,3 +45,5 @@ env/
 .DS_Store
 .idea/
 .vscode/
+
+v1.ipynb
