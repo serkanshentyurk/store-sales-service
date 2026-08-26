@@ -27,6 +27,11 @@ def _raw_frame(n_stores=6, days=40, seed=0):
             })
     return pd.DataFrame(rows)
 
+def _store_reference_frame():
+    df = _raw_frame().drop_duplicates("Store")
+    return df[["Store", "StoreType", "Assortment", "CompetitionDistance",
+               "CompetitionOpenSinceMonth", "CompetitionOpenSinceYear",
+               "Promo2"]].reset_index(drop=True)
 
 @pytest.fixture
 def raw_frame():
@@ -35,7 +40,15 @@ def raw_frame():
 
 @pytest.fixture
 def store_reference():
-    df = _raw_frame().drop_duplicates("Store")
-    return df[["Store", "StoreType", "Assortment", "CompetitionDistance",
-               "CompetitionOpenSinceMonth", "CompetitionOpenSinceYear",
-               "Promo2"]].reset_index(drop=True)
+    return _store_reference_frame()
+    
+@pytest.fixture
+def patch_load_pipeline(monkeypatch, raw_frame):
+    from src.train import build_pipeline
+    from src.features import add_features
+    import src.predict as predict_mod
+
+    train = add_features(raw_frame)
+    pipe = build_pipeline().fit(train, train["Sales"])
+    monkeypatch.setattr(predict_mod, "_load_pipeline", lambda: pipe)
+    monkeypatch.setattr(predict_mod, "_load_store_reference", lambda: _store_reference_frame())
