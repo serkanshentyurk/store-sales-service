@@ -1,4 +1,4 @@
-main: CI-v2
+name: CI
 
 on:
   push:
@@ -20,4 +20,4 @@ jobs:
         run: pip install -r requirements-dev.txt
 
       - name: Run tests
-        run: pytest -m pytest -q
+        run: python -m pytest -q
