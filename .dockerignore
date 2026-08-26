@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+.git/
+.pytest_cache/
+tests/
+notebooks/
+*.ipynb
+data/train.csv
+reports/
+.DS_Store
