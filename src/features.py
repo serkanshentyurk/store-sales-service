@@ -10,6 +10,7 @@ def add_features(df: pd.DataFrame) -> pd.DataFrame:
 	df["Year"] = df["Date"].dt.year
 	df["Month"] = df["Date"].dt.month
 	df["Day"] = df["Date"].dt.day
+	df["DayOfWeek"] = df["Date"].dt.dayofweek + 1
 	df["WeekOfYear"] = df["Date"].dt.isocalendar().week.astype(int)
 
 	comp_open = pd.to_datetime(
