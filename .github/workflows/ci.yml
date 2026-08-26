@@ -1,4 +1,4 @@
-main: CI
+main: CI-v2
 
 on:
   push:
