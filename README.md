@@ -1,5 +1,7 @@
 # store-sales-service
 
+[![CI](https://github.com/serkanshentyurk/store-sales-service/actions/workflows/ci.yml/badge.svg)](https://github.com/serkanshentyurk/store-sales-service/actions/workflows/ci.yml)
+
 A containerised machine-learning service that predicts daily sales for retail
 stores and serves those predictions over a REST API. The model is trained
 offline and shipped inside a Docker image, so a running container answers
@@ -24,7 +26,7 @@ from training — against a strong per-store baseline.
 
 | Model                                    | RMSPE  | MAE (€) |
 | ---------------------------------------- | ------ | -------- |
-| Baseline (per-store × day-of-week mean) | 0.2332 | 1240.3   |
+| Baseline (per-store × day-of-week mean)  | 0.2332 | 1240.3   |
 | HistGradientBoostingRegressor            | 0.1760 | 806.3    |
 
 RMSPE is the competition's metric; MAE is reported in euros for a
@@ -164,6 +166,16 @@ Logging is configured once at the application entry point and written to
 stdout/stderr, so a running container's logs are captured by Docker (and, later,
 by a cloud log collector) with no additional configuration.
 
+## Deployment
+
+The container has been deployed to AWS as a validation of the production path:
+the image pushed to Amazon ECR, run as an AWS Fargate task under an IAM
+execution role, with logs flowing to CloudWatch and the API reachable over the
+public internet. This was done as a one-off exercise and the resources have been
+torn down, so there is no live endpoint — but the deploy path
+(ECR → Fargate → IAM role → CloudWatch) has been exercised end to end, not just
+described.
+
 ## Limitations
 
 - **The holdout is a single quiet window.** The last 6 weeks (mid-June to
@@ -191,6 +203,6 @@ by a cloud log collector) with no additional configuration.
 ## Planned (not yet implemented)
 
 The following are on the roadmap and are **not** part of the current repository:
-a cloud deployment of the containerised service, and basic drift monitoring.
-The MLflow model registry (as opposed to the experiment tracking already in
-place) is also not used.
+a persistent/automated cloud deployment (the deploy described above was a
+manual, torn-down exercise), basic drift monitoring, and the MLflow model
+registry (as opposed to the experiment tracking already in place).
