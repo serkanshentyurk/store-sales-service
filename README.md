@@ -1,4 +1,3 @@
-
 # store-sales-service
 
 A containerised machine-learning service that predicts daily sales for retail
