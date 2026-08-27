@@ -192,5 +192,6 @@ by a cloud log collector) with no additional configuration.
 ## Planned (not yet implemented)
 
 The following are on the roadmap and are **not** part of the current repository:
-continuous integration (automated tests and image build on push), experiment
-and model tracking (MLflow), a cloud deployment, and basic drift monitoring.
+a cloud deployment of the containerised service, and basic drift monitoring.
+The MLflow model registry (as opposed to the experiment tracking already in
+place) is also not used.
