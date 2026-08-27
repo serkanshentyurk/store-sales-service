@@ -141,6 +141,30 @@ python -m pytest
   with the model loaders replaced by tiny in-memory stand-ins so the suite runs
   without the trained artefact or the dataset present.
 
+The source is type-checked with `mypy`. Both the test suite and the type check
+run automatically in CI (GitHub Actions) on every push, on a clean machine —
+which also verifies that the tests genuinely need no local data or model.
+
+## Experiment tracking
+
+Training runs are tracked with [MLflow](https://mlflow.org/). Each run logs its
+parameters (holdout window, random seed, model type) and metrics (model and
+baseline RMSPE/MAE), so configurations can be compared in the MLflow UI rather
+than by reading terminal output. The tracking store is a local SQLite backend
+(MLflow 3's default).
+
+This is experiment tracking only — the model registry is deliberately not used.
+The trained artefact is saved with `joblib` and copied into the Docker image as
+described above; it is not pulled from a registry at build time.
+
+## Logging
+
+The service logs through Python's `logging` module: an INFO line per served
+prediction and a WARNING line when a request is rejected (unknown store).
+Logging is configured once at the application entry point and written to
+stdout/stderr, so a running container's logs are captured by Docker (and, later,
+by a cloud log collector) with no additional configuration.
+
 ## Limitations
 
 - **The holdout is a single quiet window.** The last 6 weeks (mid-June to
