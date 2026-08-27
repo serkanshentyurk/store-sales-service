@@ -26,7 +26,7 @@ from training — against a strong per-store baseline.
 
 | Model                                    | RMSPE  | MAE (€) |
 | ---------------------------------------- | ------ | -------- |
-| Baseline (per-store × day-of-week mean)  | 0.2332 | 1240.3   |
+| Baseline (per-store × day-of-week mean) | 0.2332 | 1240.3   |
 | HistGradientBoostingRegressor            | 0.1760 | 806.3    |
 
 RMSPE is the competition's metric; MAE is reported in euros for a
@@ -74,6 +74,40 @@ curl -X POST http://localhost:8000/predict \
        "StateHoliday": "0", "SchoolHoliday": 0}'
 # -> {"predicted_sales": 4823.5}
 ```
+
+## Architecture
+
+```mermaid
+flowchart LR
+    subgraph training["Training (offline)"]
+        DATA[("Rossmann CSVs<br/>train + store")] --> TRAIN["src.train<br/>clean → features →<br/>fit pipeline → evaluate"]
+        TRAIN --> ARTEFACT[["pipeline.joblib"]]
+        TRAIN -. logs params/metrics .-> MLF[("MLflow<br/>tracking")]
+    end
+
+    subgraph serving["Serving (container)"]
+        ARTEFACT --> IMAGE["Docker image"]
+        IMAGE --> API["FastAPI service<br/>/predict · /health"]
+        REQ(["POST /predict<br/>store, date, flags"]) --> API
+        API --> RESP(["predicted sales (€)"])
+        API -. INFO / WARNING .-> LOGS[("stdout →<br/>CloudWatch")]
+    end
+
+    subgraph checks["CI (every push)"]
+        CI["GitHub Actions<br/>pytest + mypy"]
+    end
+
+    IMAGE -. deployed, then torn down .-> AWS["AWS Fargate<br/>(pulled from ECR)"]
+
+    classDef store fill:#eef,stroke:#88a
+    class DATA,ARTEFACT,MLF,LOGS store
+```
+
+The training path (left) produces a fitted pipeline that is baked into the
+Docker image; the serving path (right) loads that artefact once and answers
+prediction requests. CI checks every push, and the same image was deployed to
+AWS Fargate as a one-off validation (now torn down — see
+[Deployment](#deployment)).
 
 ## How it works
 
