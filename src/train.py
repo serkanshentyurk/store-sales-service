@@ -15,12 +15,14 @@ from sklearn.pipeline import Pipeline
 from src.data import load_clean_data
 from src.features import add_features, build_preprocessor
 
+import mlflow
+
 DATA_PATH = "data"
 MODEL_DIR = Path("models")
 REPORT_DIR = Path("reports")
 MODEL_PATH = MODEL_DIR / "pipeline.joblib"
 METRICS_PATH = REPORT_DIR / "metrics.json"
-HOLDOUT_WEEKS = 6
+HOLDOUT_WEEKS = 8
 RANDOM_STATE = 42
 TARGET = "Sales"
 
@@ -63,30 +65,40 @@ def main() -> None:
     df = add_features(load_clean_data(DATA_PATH))
     train_df, test_df = temporal_split(df, HOLDOUT_WEEKS)
 
-    pipe = build_pipeline()
-    pipe.fit(train_df, train_df[TARGET])
+    with mlflow.start_run():
+        pipe = build_pipeline()
+        pipe.fit(train_df, train_df[TARGET])
 
-    model_pred = pipe.predict(test_df)
-    base_pred = baseline_predict(train_df, test_df)
+        model_pred = pipe.predict(test_df)
+        base_pred = baseline_predict(train_df, test_df)
 
-    metrics = {
-        "model_rmspe": round(rmspe(test_df[TARGET], model_pred), 4),
-        "model_mae": round(mean_absolute_error(test_df[TARGET], model_pred), 1),
-        "baseline_rmspe": round(rmspe(test_df[TARGET], base_pred), 4),
-        "baseline_mae": round(mean_absolute_error(test_df[TARGET], base_pred), 1),
-        "n_train": int(len(train_df)),
-        "n_test": int(len(test_df)),
-    }
+        metrics = {
+            "model_rmspe": round(rmspe(test_df[TARGET], model_pred), 4),
+            "model_mae": round(mean_absolute_error(test_df[TARGET], model_pred), 1),
+            "baseline_rmspe": round(rmspe(test_df[TARGET], base_pred), 4),
+            "baseline_mae": round(mean_absolute_error(test_df[TARGET], base_pred), 1),
+            "n_train": int(len(train_df)),
+            "n_test": int(len(test_df)),
+        }
 
-    MODEL_DIR.mkdir(parents=True, exist_ok=True)
-    REPORT_DIR.mkdir(parents=True, exist_ok=True)
-    joblib.dump(pipe, MODEL_PATH)
-    METRICS_PATH.write_text(json.dumps(metrics, indent=2))
+        mlflow.log_param("holdout_weeks", HOLDOUT_WEEKS)
+        mlflow.log_param("random_state", RANDOM_STATE)
+        mlflow.log_param("model", "HistGradientBoostingRegressor")
 
-    print(f"model    RMSPE {metrics['model_rmspe']}  MAE {metrics['model_mae']}")
-    print(f"baseline RMSPE {metrics['baseline_rmspe']}  MAE {metrics['baseline_mae']}")
-    print(f"model -> {MODEL_PATH}")
-    print(f"metrics -> {METRICS_PATH}")
+        mlflow.log_metric("model_rmspe", metrics["model_rmspe"])
+        mlflow.log_metric("model_mae", metrics["model_mae"])
+        mlflow.log_metric("baseline_rmspe", metrics["baseline_rmspe"])
+        mlflow.log_metric("baseline_mae", metrics["baseline_mae"])
+
+        MODEL_DIR.mkdir(parents=True, exist_ok=True)
+        REPORT_DIR.mkdir(parents=True, exist_ok=True)
+        joblib.dump(pipe, MODEL_PATH)
+        METRICS_PATH.write_text(json.dumps(metrics, indent=2))
+
+        print(f"model    RMSPE {metrics['model_rmspe']}  MAE {metrics['model_mae']}")
+        print(f"baseline RMSPE {metrics['baseline_rmspe']}  MAE {metrics['baseline_mae']}")
+        print(f"model -> {MODEL_PATH}")
+        print(f"metrics -> {METRICS_PATH}")
 
 
 if __name__ == "__main__":
